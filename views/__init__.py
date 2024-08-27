@@ -1,2 +1,3 @@
 from .user import login_user, create_user
-from .tags import get_all_tags  # Assuming the function is in tag.py
+from .tags import get_all_tags
+from .categories import get_categories

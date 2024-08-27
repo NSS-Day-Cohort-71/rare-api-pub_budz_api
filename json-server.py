@@ -4,6 +4,7 @@ from handler import HandleRequests, status
 
 from views import login_user, create_user
 from views import get_all_tags  # Import the function to fetch tags
+from views import get_categories
 
 
 class JSONServer(HandleRequests):
@@ -16,8 +17,11 @@ class JSONServer(HandleRequests):
                 tags = get_all_tags()
                 response = json.dumps(tags)
                 self.response(response, status.HTTP_200_SUCCESS.value)
+            elif url["requested_resource"] == "categories":
+                response_body = get_categories()
+                self.response(response_body, status.HTTP_200_SUCCESS.value)
             else:
-                self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+                self.response("Resource not found", status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
 
         except Exception as e:
             print(f"Error processing GET request: {str(e)}")
