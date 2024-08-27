@@ -3,13 +3,26 @@ from http.server import HTTPServer
 from handler import HandleRequests, status
 
 from views import login_user, create_user
+from views import get_all_tags  # Import the function to fetch tags
 
 
 class JSONServer(HandleRequests):
 
     def do_GET(self):
-        pass
+        try:
+            url = self.parse_url(self.path)
 
+            if url["requested_resource"] == "tags":
+                tags = get_all_tags()
+                response = json.dumps(tags)
+                self.response(response, status.HTTP_200_SUCCESS.value)
+            else:
+                self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+
+        except Exception as e:
+            print(f"Error processing GET request: {str(e)}")
+            self.response(json.dumps({"error": "Internal server error"}), status.HTTP_500_SERVER_ERROR.value)
+            
     def do_POST(self):
         try:
             url = self.parse_url(self.path)
