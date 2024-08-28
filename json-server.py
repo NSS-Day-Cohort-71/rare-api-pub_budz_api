@@ -3,8 +3,7 @@ from http.server import HTTPServer
 from handler import HandleRequests, status
 
 from views import login_user, create_user
-from views import get_all_tags  # Import the function to fetch tags
-from views import get_categories
+from views import get_all_tags, get_categories, update_category
 
 
 class JSONServer(HandleRequests):
@@ -63,11 +62,42 @@ class JSONServer(HandleRequests):
             print(f"Error processing POST request: {str(e)}")
             self.response(json.dumps({"error": "Internal server error"}), status.HTTP_500_SERVER_ERROR.value)
 
+    def do_PUT(self):
+        try:
+            url = self.parse_url(self.path)
+            print(f"URL: {url}")
+
+            if url["requested_resource"] == "categories":
+                content_length = int(self.headers['Content-Length'])
+                print(f"Content Length: {content_length}")
+
+                put_data = self.rfile.read(content_length)
+                print(f"PUT Data: {put_data}")
+
+                put_data = json.loads(put_data)
+                print(f"Parsed PUT Data: {put_data}")
+
+                if url["pk"]:
+                    category_id = url["pk"]
+                    print(f"Category ID: {category_id}")
+
+                    # Update the category in the database
+                    update_category(category_id, put_data)
+
+                    self.response("", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value)
+                else:
+                    self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+
+        except Exception as e:
+            print(f"Error processing PUT request: {str(e)}")
+            self.response(json.dumps({"error": "Internal server error"}), status.HTTP_500_SERVER_ERROR.value)
+
+
     def do_DELETE(self):
         pass
 
-    def do_PUT(self):
-        pass
+    # def do_PUT(self):
+    #     pass
 
 
 def main():
@@ -78,5 +108,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 # 
