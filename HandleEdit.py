@@ -1,23 +1,6 @@
 import sqlite3
 from handler import HandleRequests, status  # Import shared components
-
-# Functions for database operations
-def get_tag_by_id(tag_id):
-    conn = sqlite3.connect('./db.sqlite3')
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, label FROM Tags WHERE id = ?", (tag_id,))
-    tag = cursor.fetchone()
-    conn.close()
-    if tag:
-        return {"id": tag[0], "label": tag[1]}
-    return None
-
-def update_tag(tag_id, new_label):
-    conn = sqlite3.connect('./db.sqlite3')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE Tags SET label = ? WHERE id = ?", (new_label, tag_id))
-    conn.commit()
-    conn.close()
+from views import get_tag_by_id, update_tag
 
 # Handler class to handle tag editing
 class EditTagHandler(HandleRequests):  # Inherit from HandleRequests
