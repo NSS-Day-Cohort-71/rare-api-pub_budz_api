@@ -52,3 +52,4 @@ class HandleRequests(BaseHTTPRequestHandler):
             "Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept"
         )
         self.end_headers()
+
