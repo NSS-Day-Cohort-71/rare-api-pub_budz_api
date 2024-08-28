@@ -40,6 +40,7 @@ CREATE TABLE "Posts" (
   "content" varchar,
   "approved" bit,
   FOREIGN KEY(`user_id`) REFERENCES `Users`(`id`)
+  FOREIGN KEY(`category_id`) REFERENCES `Categories`(`id`)
 );
 
 CREATE TABLE "Comments" (
@@ -88,6 +89,11 @@ CREATE TABLE "Categories" (
 INSERT INTO Categories ('label') VALUES ('News');
 INSERT INTO Categories ('label') VALUES ('Technology');
 INSERT INTO Categories ('label') VALUES ('Entertainment');
+INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (1, 2, 'AI - Friend, or Foe?', '2023-04-15', 'AI is super helpful, but it is also super scary.', 1)
+DELETE FROM Posts WHERE id=1
+INSERT INTO Posts (user_id, category_id, title, publication_date, content, approved) VALUES (2, 1, 'Global Warming: What You Need to Know', '2024-08-15', 'Global warming is a critical issue that affects everyone. Learn what you can do to help.', 1);
+INSERT INTO Posts (user_id, category_id, title, publication_date, content, approved) VALUES (3, 2, 'The Rise of Quantum Computing', '2024-08-20', 'Quantum computing is poised to revolutionize technology. Discover its potential impacts.', 1);
+INSERT INTO Posts (user_id, category_id, title, publication_date, content, approved) VALUES (2, 3, 'Top 10 Movies to Watch in 2024', '2024-08-25', 'Here''s a list of the top 10 movies to watch in 2024. Don''t miss out on these hits!', 1);
 INSERT INTO Tags ('label') VALUES ('JavaScript');
 INSERT INTO Reactions ('label', 'image_url') VALUES ('happy', 'https://pngtree.com/so/happy');
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'john', 'doe', 'j.doe@gmail.com', 'j.doe45', '121x390')
