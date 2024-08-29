@@ -7,6 +7,7 @@ from views import get_all_tags  # Import the function to fetch tags
 from views import get_categories, update_category
 from views import get_posts
 from views import update_tag, get_tag_by_id  # Import the necessary functions
+from views import delete_category
 
 
 class JSONServer(HandleRequests):
@@ -93,11 +94,11 @@ class JSONServer(HandleRequests):
     def do_DELETE(self):
         try:
             url = self.parse_url(self.path)
-            
+
             if url["requested_resource"] == "categories":
                 if url["pk"]:
                     category_id = url["pk"]
-                    delete_success = delete_category(category_id)  # Implement this function in your views
+                    delete_success = delete_category(category_id)  # Implemented in views/categories.py
 
                     if delete_success:
                         self.response("", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value)
@@ -111,7 +112,7 @@ class JSONServer(HandleRequests):
         except Exception as e:
             print(f"Error processing DELETE request: {str(e)}")
             self.response(json.dumps({"error": "Internal server error"}), status.HTTP_500_SERVER_ERROR.value)
-
+            
     def do_PUT(self):
         try:
             url = self.parse_url(self.path)

@@ -35,6 +35,7 @@ def update_category(category_id, new_data):
         return False
 
 def delete_category(category_id):
+    """Delete a category from the database."""
     try:
         with sqlite3.connect("./db.sqlite3") as conn:
             db_cursor = conn.cursor()
