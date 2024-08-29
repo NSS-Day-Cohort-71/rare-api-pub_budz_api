@@ -3,7 +3,7 @@ from http.server import HTTPServer
 from handler import HandleRequests, status
 
 from views import login_user, create_user
-from views import get_all_tags, update_tag
+from views import get_all_tags, update_tag, create_tag
 from views import get_categories, update_category, create_category
 from views import get_posts, get_single_post, update_post
 from views import delete_category, delete_tag
@@ -98,6 +98,27 @@ class JSONServer(HandleRequests):
                         json.dumps({"error": "Failed to create category"}),
                         status.HTTP_500_SERVER_ERROR.value,
                     )
+            elif url["requested_resource"] == "tags":
+                content_length = int(self.headers["Content-Length"])
+                post_data = self.rfile.read(content_length)  # Get the data sent by the client
+
+                try:
+                    tag = json.loads(post_data)  # Parse the JSON data
+                except json.JSONDecodeError:
+                    return self.response(
+                        json.dumps({"error": "Invalid JSON"}),
+                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
+                        )
+
+                new_tag = create_tag(tag)
+
+                if new_tag:
+                    self.response(json.dumps(new_tag), status.HTTP_201_SUCCESS_CREATED.value)
+                else:
+                     self.response(
+                            json.dumps({"error": "Failed to create tag"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
 
             else:
                 self.response(
