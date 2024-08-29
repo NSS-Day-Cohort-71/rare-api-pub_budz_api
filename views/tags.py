@@ -32,8 +32,11 @@ def update_tag(tag_id, new_label):
     cursor = conn.cursor()
 
     cursor.execute("UPDATE Tags SET label = ? WHERE id = ?", (new_label, tag_id))
+    rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
+
+    return True if rows_affected > 0 else False
 
 
 def edit_tag_view(tag_id):

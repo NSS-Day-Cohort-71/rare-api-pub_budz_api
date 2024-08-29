@@ -1,3 +1,5 @@
+import json
+
 from enum import Enum
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
@@ -17,7 +19,9 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     def response(self, body, code):
         self.set_response_code(code)
-        self.wfile.write(body.encode())
+        if isinstance(body, dict):
+            body = json.dumps(body)  # Convert dict to JSON string
+        self.wfile.write(body.encode("utf-8"))
 
     def parse_url(self, path):
         """Parse the url into the resource and id"""
@@ -53,4 +57,3 @@ class HandleRequests(BaseHTTPRequestHandler):
             "Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept"
         )
         self.end_headers()
-
