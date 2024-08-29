@@ -17,11 +17,13 @@ def get_posts():
             Categories.label AS category,
             Posts.content,
             Posts.image_url,
-            Posts.approved
+            Posts.approved,
+            Posts.is_deleted
         FROM Posts
         JOIN Users ON Posts.user_id = Users.id
         JOIN Categories ON Posts.category_id = Categories.id
         WHERE Posts.approved = 1
+        AND Posts.is_deleted = 0
         AND Posts.publication_date <= date('now')
         ORDER BY Posts.publication_date DESC
         """
@@ -48,10 +50,12 @@ def get_single_post(pk):
             c.label AS category,
             p.content,
             p.image_url,
-            p.approved
+            p.approved,
+            p.is_deleted
         FROM Posts p
         JOIN Categories c ON p.category_id = c.id
         WHERE p.id = ?
+        AND p.is_deleted = 0
         """,
             (pk,),
         )
@@ -105,3 +109,20 @@ def update_post(id, post_data):
         )
 
     return True if db_cursor.rowcount > 0 else False
+
+
+def delete_post(id):
+    with sqlite3.connect("./db.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute(
+            """ 
+            UPDATE Posts
+            Set is_deleted = 1
+            WHERE id = ?
+            """,
+            (id,),
+        )
+        conn.commit()
+
+        return True if db_cursor.rowcount > 0 else False
