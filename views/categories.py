@@ -14,6 +14,7 @@ def get_categories():
 
     return json.dumps(categories_list)
 
+
 def update_category(category_id, new_data):
     try:
         with sqlite3.connect("./db.sqlite3") as conn:
@@ -26,13 +27,14 @@ def update_category(category_id, new_data):
                 SET label = ?
                 WHERE id = ?
                 """,
-                (label, category_id)  # Use extracted label here
+                (label, category_id),  # Use extracted label here
             )
             conn.commit()
             return db_cursor.rowcount > 0  # Return True if the update was successful
     except Exception as e:
         print(f"Error updating category: {str(e)}")
         return False
+
 
 def delete_category(category_id):
     """Delete a category from the database."""
@@ -44,7 +46,7 @@ def delete_category(category_id):
                 DELETE FROM Categories
                 WHERE id = ?
                 """,
-                (category_id,)
+                (category_id,),
             )
             conn.commit()
             return db_cursor.rowcount > 0  # Return True if the deletion was successful
