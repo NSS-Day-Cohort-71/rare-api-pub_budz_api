@@ -7,7 +7,7 @@ from views import get_all_tags  # Import the function to fetch tags
 from views import get_categories, update_category
 from views import get_posts
 from views import update_tag, get_tag_by_id  # Import the necessary functions
-from views import delete_category
+from views import delete_category, delete_tag
 
 
 class JSONServer(HandleRequests):
@@ -106,6 +106,19 @@ class JSONServer(HandleRequests):
                         self.response(json.dumps({"error": "Failed to delete category"}), status.HTTP_500_SERVER_ERROR.value)
                 else:
                     self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+
+            elif url["requested_resource"] == "tags":
+                if url["pk"]:
+                    tag_id = url["pk"]
+                    delete_success = delete_tag(tag_id)  # Implemented in views/tags.py
+
+                    if delete_success:
+                        self.response("", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value)
+                    else:
+                        self.response(json.dumps({"error": "Failed to delete tag"}), status.HTTP_500_SERVER_ERROR.value)
+                else:
+                    self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+
             else:
                 self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
 
