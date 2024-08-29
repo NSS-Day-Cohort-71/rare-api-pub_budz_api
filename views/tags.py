@@ -63,3 +63,21 @@ def handle_edit_tag_submission(tag_id, form_data):
         return "Tag updated successfully!", 302  # Redirect to tag list
     else:
         return "Label is required", 400  # Handle error
+
+def delete_tag(tag_id):
+    """Delete a tag from the database."""
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            db_cursor = conn.cursor()
+            db_cursor.execute(
+                """
+                DELETE FROM Tags
+                WHERE id = ?
+                """,
+                (tag_id,)
+            )
+            conn.commit()
+            return db_cursor.rowcount > 0  # Return True if the deletion was successful
+    except Exception as e:
+        print(f"Error deleting tag: {str(e)}")
+        return False
