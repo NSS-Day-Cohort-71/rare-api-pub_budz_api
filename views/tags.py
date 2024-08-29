@@ -81,3 +81,31 @@ def delete_tag(tag_id):
     except Exception as e:
         print(f"Error deleting tag: {str(e)}")
         return False
+def create_tag(new_data):
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            db_cursor = conn.cursor()
+
+            label = new_data.get("label", None)
+            
+            if not label:
+                print(f"Label not provided in the request data: {new_data}")
+                return None
+
+            db_cursor.execute(
+                """
+                INSERT INTO Tags (label)
+                VALUES (?)
+                """,
+                (label,)
+            )
+
+            conn.commit()
+
+            tag_id = db_cursor.lastrowid
+
+            return {"id": tag_id, "label": label}
+
+    except Exception as e:
+        print(f"Error creating tag: {str(e)}")
+        return None
