@@ -53,3 +53,32 @@ def delete_category(category_id):
     except Exception as e:
         print(f"Error deleting category: {str(e)}")
         return False
+
+def create_category(new_data):
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            db_cursor = conn.cursor()
+
+            label = new_data.get("label", None)
+            
+            if not label:
+                print(f"Label not provided in the request data: {new_data}")
+                return None
+
+            db_cursor.execute(
+                """
+                INSERT INTO Categories (label)
+                VALUES (?)
+                """,
+                (label,)
+            )
+
+            conn.commit()
+
+            category_id = db_cursor.lastrowid
+
+            return {"id": category_id, "label": label}
+
+    except Exception as e:
+        print(f"Error creating category: {str(e)}")
+        return None
