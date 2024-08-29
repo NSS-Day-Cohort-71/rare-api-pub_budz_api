@@ -91,7 +91,26 @@ class JSONServer(HandleRequests):
             )
 
     def do_DELETE(self):
-        pass
+        try:
+            url = self.parse_url(self.path)
+            
+            if url["requested_resource"] == "categories":
+                if url["pk"]:
+                    category_id = url["pk"]
+                    delete_success = delete_category(category_id)  # Implement this function in your views
+
+                    if delete_success:
+                        self.response("", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value)
+                    else:
+                        self.response(json.dumps({"error": "Failed to delete category"}), status.HTTP_500_SERVER_ERROR.value)
+                else:
+                    self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+            else:
+                self.response(json.dumps({"error": "Resource not found"}), status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value)
+
+        except Exception as e:
+            print(f"Error processing DELETE request: {str(e)}")
+            self.response(json.dumps({"error": "Internal server error"}), status.HTTP_500_SERVER_ERROR.value)
 
     def do_PUT(self):
         try:
