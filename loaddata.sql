@@ -97,3 +97,8 @@ INSERT INTO Posts (user_id, category_id, title, publication_date, content, appro
 INSERT INTO Tags ('label') VALUES ('JavaScript');
 INSERT INTO Reactions ('label', 'image_url') VALUES ('happy', 'https://pngtree.com/so/happy');
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'john', 'doe', 'j.doe@gmail.com', 'j.doe45', '121x390')
+
+DELETE FROM Tags WHERE label='JavaScript';
+
+INSERT INTO Tags ('label') VALUES ('HTML');
+INSERT INTO Tags ('label') VALUES ('CSS');

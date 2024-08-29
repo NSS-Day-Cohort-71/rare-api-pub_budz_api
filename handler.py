@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler
 
 
+
 class status(Enum):
     HTTP_200_SUCCESS = 200
     HTTP_201_SUCCESS_CREATED = 201
