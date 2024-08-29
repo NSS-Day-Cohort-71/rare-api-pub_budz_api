@@ -33,3 +33,21 @@ def update_category(category_id, new_data):
     except Exception as e:
         print(f"Error updating category: {str(e)}")
         return False
+
+def delete_category(category_id):
+    """Delete a category from the database."""
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            db_cursor = conn.cursor()
+            db_cursor.execute(
+                """
+                DELETE FROM Categories
+                WHERE id = ?
+                """,
+                (category_id,)
+            )
+            conn.commit()
+            return db_cursor.rowcount > 0  # Return True if the deletion was successful
+    except Exception as e:
+        print(f"Error deleting category: {str(e)}")
+        return False
