@@ -7,7 +7,7 @@ from views import get_all_tags, update_tag, create_tag
 from views import get_categories, update_category, create_category
 from views import get_posts, get_single_post, update_post
 from views import delete_category, delete_tag
-
+from views import get_all_comments, delete_comment
 
 class JSONServer(HandleRequests):
 
@@ -28,6 +28,9 @@ class JSONServer(HandleRequests):
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
                 response_body = get_posts()
+                self.response(response_body, status.HTTP_200_SUCCESS.value)
+            elif url["requested_resource"] == "comments":  
+                response_body = get_all_comments()
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
             else:
                 self.response(
@@ -138,12 +141,11 @@ class JSONServer(HandleRequests):
         try:
             url = self.parse_url(self.path)
 
+            # Handle category deletion
             if url["requested_resource"] == "categories":
                 if url["pk"]:
                     category_id = url["pk"]
-                    delete_success = delete_category(
-                        category_id
-                    )  # Implemented in views/categories.py
+                    delete_success = delete_category(category_id)
 
                     if delete_success:
                         self.response(
@@ -160,10 +162,11 @@ class JSONServer(HandleRequests):
                         status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                     )
 
+            # Handle tag deletion
             elif url["requested_resource"] == "tags":
                 if url["pk"]:
                     tag_id = url["pk"]
-                    delete_success = delete_tag(tag_id)  # Implemented in views/tags.py
+                    delete_success = delete_tag(tag_id)
 
                     if delete_success:
                         self.response(
@@ -180,6 +183,28 @@ class JSONServer(HandleRequests):
                         status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                     )
 
+            # Handle comment deletion
+            elif url["requested_resource"] == "comments":
+                if url["pk"]:
+                    comment_id = url["pk"]
+                    delete_success = delete_comment(comment_id)  # Implement this function in views/comments.py
+
+                    if delete_success:
+                        self.response(
+                            "", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value
+                        )
+                    else:
+                        self.response(
+                            json.dumps({"error": "Failed to delete comment"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
+                else:
+                    self.response(
+                        json.dumps({"error": "Resource not found"}),
+                        status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                    )
+
+            # Handle other resources
             else:
                 self.response(
                     json.dumps({"error": "Resource not found"}),
