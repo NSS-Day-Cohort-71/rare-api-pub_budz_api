@@ -68,3 +68,72 @@ def create_user(user):
         id = db_cursor.lastrowid
 
         return json.dumps({"token": id, "valid": True})
+
+
+def get_all_users():
+    try:
+        # Connect to your SQLite database
+        with sqlite3.connect("./db.sqlite3") as conn:
+            conn.row_factory = sqlite3.Row
+            db_cursor = conn.cursor()
+
+            # Execute a query to get all users
+            db_cursor.execute("""
+                SELECT
+                    id,
+                    first_name,
+                    last_name,
+                    email,
+                    bio,
+                    username,
+                    profile_image_url
+                FROM Users
+            """)
+
+            # Fetch all the rows returned by the query
+            users = db_cursor.fetchall()
+
+            # Convert the rows to a list of dictionaries
+            users_list = [dict(user) for user in users]
+
+        # Return the list of users as a JSON string
+        return json.dumps(users_list)
+
+    except Exception as e:
+        print(f"Error fetching users: {str(e)}")
+        return json.dumps({"error": "Failed to retrieve users"})
+
+
+def get_single_user(user_id):
+    try:
+        # Connect to your SQLite database
+        with sqlite3.connect("./db.sqlite3") as conn:
+            conn.row_factory = sqlite3.Row
+            db_cursor = conn.cursor()
+
+            # Execute a query to get a single user by their ID
+            db_cursor.execute("""
+                SELECT
+                    id,
+                    first_name,
+                    last_name,
+                    email,
+                    bio,
+                    username,
+                    profile_image_url
+                FROM Users
+                WHERE id = ?
+            """, (user_id,))
+
+            # Fetch the single row returned by the query
+            user = db_cursor.fetchone()
+
+            # If user exists, return the user as a dictionary
+            if user:
+                return json.dumps(dict(user))
+            else:
+                return json.dumps({"error": "User not found"})
+
+    except Exception as e:
+        print(f"Error fetching user: {str(e)}")
+        return json.dumps({"error": "Failed to retrieve user"})
