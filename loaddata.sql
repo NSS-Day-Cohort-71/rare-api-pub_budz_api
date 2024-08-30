@@ -98,6 +98,7 @@ INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'conte
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (2, 3, 'Top 10 Movies to Watch in 2024', '2024-08-25', 'Here''s a list of the top 10 movies to watch in 2024. Don''t miss out on these hits!', 1);
 
 ALTER TABLE Posts ADD COLUMN is_deleted INTEGER DEFAULT 0;
+ALTER TABLE Posts RENAME COLUMN profile_image TO image_url;
 
 INSERT INTO Tags ('label') VALUES ('JavaScript');
 INSERT INTO Tags ('label') VALUES ('HTML');

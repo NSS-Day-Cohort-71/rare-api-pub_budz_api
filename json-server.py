@@ -6,7 +6,7 @@ from views import login_user, create_user
 from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
 from views import get_posts, get_single_post, update_post, delete_post
-from views import get_all_comments, delete_comment,create_comment, update_comment 
+from views import get_all_comments, delete_comment,create_comment, update_comment ,get_all_users,get_single_user
 
 class JSONServer(HandleRequests):
 
@@ -30,6 +30,15 @@ class JSONServer(HandleRequests):
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
             elif url["requested_resource"] == "comments":  
                 response_body = get_all_comments()
+                self.response(response_body, status.HTTP_200_SUCCESS.value)
+
+
+            elif url["requested_resource"] == "users":
+                if url["pk"] != 0:
+                    response_body = get_single_user(url["pk"])
+                    return self.response(response_body, status.HTTP_200_SUCCESS.value)
+
+                response_body = get_all_users()
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
             else:
                 self.response(
