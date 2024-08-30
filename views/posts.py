@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import datetime
 
 
 def get_posts():
@@ -126,3 +127,41 @@ def delete_post(id):
         conn.commit()
 
         return True if db_cursor.rowcount > 0 else False
+
+
+def create_post(new_post_data):
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            conn.row_factory = sqlite3.Row
+            db_cursor = conn.cursor()
+
+            current_datetime = datetime.datetime.now().isoformat()
+
+            db_cursor.execute(
+                """
+                INSERT INTO Posts (user_id, publication_date, title, image_url, content, category_id, approved, is_deleted) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+                """,
+                (
+                    new_post_data["user_id"],
+                    current_datetime,
+                    new_post_data["title"],
+                    new_post_data["image_url"],
+                    new_post_data["content"],
+                    new_post_data["category_id"],
+                    1,
+                    0,
+                ),
+            )
+
+            conn.commit()
+
+            new_post_id = db_cursor.lastrowid
+            db_cursor.execute("SELECT * FROM Posts WHERE id = ?", (new_post_id,))
+            new_post = db_cursor.fetchone()
+
+            return dict(new_post)
+        
+    except sqlite3.Error as e:
+        print(f"Error creating post: {e}")
+        return False

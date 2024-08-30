@@ -2,11 +2,11 @@ import json
 from http.server import HTTPServer
 from handler import HandleRequests, status
 
-from views import login_user, create_user
+from views import login_user, create_user, get_all_users, get_single_user
 from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
-from views import get_posts, get_single_post, update_post, delete_post
-from views import get_all_comments, delete_comment, create_comment, update_comment, get_comments_by_post, get_all_users, get_single_user
+from views import get_posts, get_single_post, update_post, delete_post, create_post
+from views import get_all_comments, delete_comment, create_comment, update_comment, get_comments_by_post
 
 class JSONServer(HandleRequests):
 
@@ -65,77 +65,76 @@ class JSONServer(HandleRequests):
         try:
             url = self.parse_url(self.path)
 
-            if url["requested_resource"] == "login":
+            def parse_post_data():
                 content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                user = json.loads(post_data)
-                response = login_user(user)
-                self.response(response, status.HTTP_200_SUCCESS.value)
+                post_data = self.rfile.read(
+                    content_length
+                )  # Get the data sent by the client
+                try:
+                    return json.loads(post_data)  # Parse the JSON data
+                except json.JSONDecodeError:
+                    self.response(
+                        json.dumps({"error": "Invalid JSON"}),
+                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
+                    )
+                    return None
+
+            if url["requested_resource"] == "login":
+                user = parse_post_data()
+                if user is not None:
+                    response = login_user(user)  # Call the login function
+                    self.response(response, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "register":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                user = json.loads(post_data)
-                response = create_user(user)
-                self.response(response, status.HTTP_201_SUCCESS_CREATED.value)
+                user = parse_post_data()
+                if user is not None:
+                    response = create_user(user)  # Call the create_user function
+                    self.response(response, status.HTTP_201_SUCCESS_CREATED.value)
 
             elif url["requested_resource"] == "categories":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                category = json.loads(post_data)
-                new_category = create_category(category)
-                if new_category:
-                    self.response(json.dumps(new_category), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                    self.response(
-                        json.dumps({"error": "Failed to create category"}),
-                        status.HTTP_500_SERVER_ERROR.value,
-                    )
+                category = parse_post_data()
+                if category is not None:
+                    new_category = create_category(
+                        category
+                    )  # Call to save the new category
+                    if new_category:
+                        self.response(
+                            json.dumps(new_category),
+                            status.HTTP_201_SUCCESS_CREATED.value,
+                        )
+                    else:
+                        self.response(
+                            json.dumps({"error": "Failed to create category"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
 
             elif url["requested_resource"] == "tags":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                tag = json.loads(post_data)
-                new_tag = create_tag(tag)
-                if new_tag:
-                    self.response(json.dumps(new_tag), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                    self.response(
-                        json.dumps({"error": "Failed to create tag"}),
-                        status.HTTP_500_SERVER_ERROR.value,
-                    )
-                    
-            elif url["requested_resource"] == "posts":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                new_post = json.loads(post_data)
-                created_post = create_post(new_post)
-                if created_post:
-                    self.response(json.dumps(created_post), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                    self.response(
-                        json.dumps({"error": "Failed to create post"}),
-                        status.HTTP_500_SERVER_ERROR.value,
-                    )
-            
-            elif url["requested_resource"] == "comments":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                new_comment = json.loads(post_data)
-                created_comment = create_comment(new_comment)
-                if created_comment:
-                    self.response(json.dumps(created_comment), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                    self.response(
-                        json.dumps({"error": "Failed to create comment"}),
-                        status.HTTP_500_SERVER_ERROR.value,
-                    )
+                tag = parse_post_data()
+                if tag is not None:
+                    new_tag = create_tag(tag)  # Call to save the new tag
+                    if new_tag:
+                        self.response(
+                            json.dumps(new_tag), status.HTTP_201_SUCCESS_CREATED.value
+                        )
+                    else:
+                        self.response(
+                            json.dumps({"error": "Failed to create tag"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
 
-            else:
-                self.response(
-                    json.dumps({"error": "Resource not found"}),
-                    status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                )
+            elif url["requested_resource"] == "posts":
+                post = parse_post_data()
+                if post is not None:
+                    new_post = create_post(post)  # Call to save the new post
+                    if new_post:
+                        self.response(
+                            json.dumps(new_post), status.HTTP_201_SUCCESS_CREATED.value
+                        )
+                    else:
+                        self.response(
+                            json.dumps({"error": "Failed to create post"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
 
         except Exception as e:
             print(f"Error processing POST request: {str(e)}")
