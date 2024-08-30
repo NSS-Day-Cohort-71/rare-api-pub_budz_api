@@ -6,7 +6,7 @@ from views import login_user, create_user
 from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
 from views import get_posts, get_single_post, update_post, delete_post
-from views import get_all_comments, delete_comment
+from views import get_all_comments, delete_comment,create_comment, update_comment 
 
 class JSONServer(HandleRequests):
 
@@ -44,93 +44,80 @@ class JSONServer(HandleRequests):
                 status.HTTP_500_SERVER_ERROR.value,
             )
 
-    def do_POST(self):
+    def do_PUT(self):
         try:
             url = self.parse_url(self.path)
+            pk = url["pk"]
 
-            if url["requested_resource"] == "login":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)  # Get the data sent by the client
+            content_len = int(self.headers["content-length"])
+            request_body = self.rfile.read(content_len)
+            request_body = json.loads(request_body)
 
-                try:
-                    user = json.loads(post_data)  # Parse the JSON data
-                except json.JSONDecodeError:
-                    return self.response(
-                        json.dumps({"error": "Invalid JSON"}),
-                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
-                    )
+            if url["requested_resource"] == "tags":
+                tag_id = pk
+                tag_data = request_body
 
-                response = login_user(user)  # Call the login function
-                self.response(response, status.HTTP_200_SUCCESS.value)
+                if pk != 0:
+                    successfully_updated = update_tag(tag_id, tag_data["label"])
+                    if successfully_updated:
+                        return self.response(
+                            {"message": "Tag updated successfully"},
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            {"message": "Tag not found"},
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
 
-            elif url["requested_resource"] == "register":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)  # Get the data sent by the client
-
-                try:
-                    user = json.loads(post_data)  # Parse the JSON data
-                except json.JSONDecodeError:
-                    return self.response(
-                        json.dumps({"error": "Invalid JSON"}),
-                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
-                    )
-
-                response = create_user(user)  # Call the create_user function
-                self.response(response, status.HTTP_201_SUCCESS_CREATED.value)
+            elif url["requested_resource"] == "posts":
+                if pk != 0:
+                    successfully_updated = update_post(pk, request_body)
+                    if successfully_updated:
+                        return self.response(
+                            {"message": "Post updated successfully"},
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            {"message": "Post not found"},
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
 
             elif url["requested_resource"] == "categories":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)  # Get the data sent by the client
+                category_id = pk
+                put_data = request_body
 
-                try:
-                    category = json.loads(post_data)  # Parse the JSON data
-                except json.JSONDecodeError:
-                    return self.response(
-                        json.dumps({"error": "Invalid JSON"}),
-                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
-                    )
-
-                # Call the create_category function to save the new category
-                new_category = create_category(category)
-
-                if new_category:
-                    self.response(json.dumps(new_category), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                    self.response(
-                        json.dumps({"error": "Failed to create category"}),
-                        status.HTTP_500_SERVER_ERROR.value,
-                    )
-            elif url["requested_resource"] == "tags":
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)  # Get the data sent by the client
-
-                try:
-                    tag = json.loads(post_data)  # Parse the JSON data
-                except json.JSONDecodeError:
-                    return self.response(
-                        json.dumps({"error": "Invalid JSON"}),
-                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
+                if pk != 0:
+                    successfully_updated = update_category(category_id, put_data)
+                    if successfully_updated:
+                        return self.response(
+                            {"message": "Category updated successfully"},
+                            status.HTTP_200_SUCCESS.value,
                         )
-
-                new_tag = create_tag(tag)
-
-                if new_tag:
-                    self.response(json.dumps(new_tag), status.HTTP_201_SUCCESS_CREATED.value)
-                else:
-                     self.response(
-                            json.dumps({"error": "Failed to create tag"}),
-                            status.HTTP_500_SERVER_ERROR.value,
+                    else:
+                        return self.response(
+                            {"message": "Category not found"},
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-
-            else:
-                self.response(
-                    json.dumps({"error": "Resource not found"}),
-                    status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                )
+            
+            elif url["requested_resource"] == "comments":
+                if pk != 0:
+                    successfully_updated = update_comment(pk, request_body)
+                    if successfully_updated:
+                        return self.response(
+                            {"message": "Comment updated successfully"},
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            {"message": "Comment not found"},
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
 
         except Exception as e:
             # Log the error and return a 500 status code
-            print(f"Error processing POST request: {str(e)}")
+            print(f"Error processing PUT request: {str(e)}")
             self.response(
                 json.dumps({"error": "Internal server error"}),
                 status.HTTP_500_SERVER_ERROR.value,
@@ -261,6 +248,20 @@ class JSONServer(HandleRequests):
                     else:
                         return self.response(
                             {"message": "Category not found"},
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
+            
+            elif url["requested_resource"] == "comments":
+                if pk != 0:
+                    successfully_updated = update_comment(pk, request_body)
+                    if successfully_updated:
+                        return self.response(
+                            {"message": "Comment updated successfully"},
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            {"message": "Comment not found"},
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
 
