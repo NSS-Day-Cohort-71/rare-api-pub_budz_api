@@ -3,10 +3,9 @@ from http.server import HTTPServer
 from handler import HandleRequests, status
 
 from views import login_user, create_user
-from views import get_all_tags, update_tag, create_tag
-from views import get_categories, update_category, create_category
-from views import get_posts, get_single_post, update_post
-from views import delete_category, delete_tag
+from views import get_all_tags, update_tag, delete_tag, create_tag
+from views import get_categories, update_category, delete_category, create_category
+from views import get_posts, get_single_post, update_post, delete_post
 from views import get_all_comments, delete_comment
 
 class JSONServer(HandleRequests):
@@ -140,76 +139,66 @@ class JSONServer(HandleRequests):
     def do_DELETE(self):
         try:
             url = self.parse_url(self.path)
+            pk = url["pk"]
 
-            # Handle category deletion
-            if url["requested_resource"] == "categories":
-                if url["pk"]:
-                    category_id = url["pk"]
-                    delete_success = delete_category(category_id)
-
-                    if delete_success:
-                        self.response(
-                            "", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value
+            if url["requested_resource"] == "posts":
+                if pk != 0:
+                    successfully_deleted = delete_post(pk)
+                    if successfully_deleted:
+                        return self.response(
+                            "Post deleted successfully", status.HTTP_200_SUCCESS.value
                         )
                     else:
-                        self.response(
-                            json.dumps({"error": "Failed to delete category"}),
-                            status.HTTP_500_SERVER_ERROR.value,
+                        return self.response(
+                            "Post not found",
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-                else:
-                    self.response(
-                        json.dumps({"error": "Resource not found"}),
-                        status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                    )
 
-            # Handle tag deletion
+            elif url["requested_resource"] == "categories":
+                category_id = pk
+
+                if pk != 0:
+                    successfully_deleted = delete_category(category_id)
+                    if successfully_deleted:
+                        return self.response(
+                            "Category deleted successfully",
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            "Category not found",
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
+
             elif url["requested_resource"] == "tags":
-                if url["pk"]:
-                    tag_id = url["pk"]
-                    delete_success = delete_tag(tag_id)
+                tag_id = pk
 
-                    if delete_success:
-                        self.response(
-                            "", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value
+                if pk != 0:
+                    successfully_deleted = delete_tag(tag_id)
+                    if successfully_deleted:
+                        return self.response(
+                            "Tag deleted successfully",
+                            status.HTTP_200_SUCCESS.value,
                         )
                     else:
-                        self.response(
-                            json.dumps({"error": "Failed to delete tag"}),
-                            status.HTTP_500_SERVER_ERROR.value,
+                        return self.response(
+                            "Tag not found",
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-                else:
-                    self.response(
-                        json.dumps({"error": "Resource not found"}),
-                        status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                    )
-
-            # Handle comment deletion
+            
             elif url["requested_resource"] == "comments":
-                if url["pk"]:
-                    comment_id = url["pk"]
-                    delete_success = delete_comment(comment_id)  # Implement this function in views/comments.py
-
-                    if delete_success:
-                        self.response(
-                            "", status.HTTP_204_SUCCESS_NO_RESPONSE_BODY.value
+                if pk != 0:
+                    successfully_deleted = delete_comment(pk)
+                    if successfully_deleted:
+                        return self.response(
+                            "Comment deleted successfully",
+                            status.HTTP_200_SUCCESS.value,
                         )
                     else:
-                        self.response(
-                            json.dumps({"error": "Failed to delete comment"}),
-                            status.HTTP_500_SERVER_ERROR.value,
+                        return self.response(
+                            "Comment not found",
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-                else:
-                    self.response(
-                        json.dumps({"error": "Resource not found"}),
-                        status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                    )
-
-            # Handle other resources
-            else:
-                self.response(
-                    json.dumps({"error": "Resource not found"}),
-                    status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
-                )
 
         except Exception as e:
             print(f"Error processing DELETE request: {str(e)}")
