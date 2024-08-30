@@ -6,7 +6,7 @@ from views import login_user, create_user
 from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
 from views import get_posts, get_single_post, update_post, delete_post
-
+from views import get_all_comments, delete_comment
 
 class JSONServer(HandleRequests):
 
@@ -27,6 +27,9 @@ class JSONServer(HandleRequests):
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
                 response_body = get_posts()
+                self.response(response_body, status.HTTP_200_SUCCESS.value)
+            elif url["requested_resource"] == "comments":  
+                response_body = get_all_comments()
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
             else:
                 self.response(
@@ -180,6 +183,20 @@ class JSONServer(HandleRequests):
                     else:
                         return self.response(
                             "Tag not found",
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
+            
+            elif url["requested_resource"] == "comments":
+                if pk != 0:
+                    successfully_deleted = delete_comment(pk)
+                    if successfully_deleted:
+                        return self.response(
+                            "Comment deleted successfully",
+                            status.HTTP_200_SUCCESS.value,
+                        )
+                    else:
+                        return self.response(
+                            "Comment not found",
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
 

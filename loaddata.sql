@@ -91,7 +91,9 @@ INSERT INTO Categories ('label') VALUES ('Technology');
 INSERT INTO Categories ('label') VALUES ('Entertainment');
 
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (1, 5, 'AI - Friend, or Foe?', '2023-04-15', 'AI is super helpful, but it is also super scary.', 1);
+INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (1, 5, 'AI - Friend, or Foe?', '2023-04-15', 'AI is super helpful, but it is also super scary.', 1);
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (2, 1, 'Global Warming: What You Need to Know', '2024-08-15', 'Global warming is a critical issue that affects everyone. Learn what you can do to help.', 1);
+INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (3, 5, 'The Rise of Quantum Computing', '2024-08-20', 'Quantum computing is poised to revolutionize technology. Discover its potential impacts.', 1);
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (3, 5, 'The Rise of Quantum Computing', '2024-08-20', 'Quantum computing is poised to revolutionize technology. Discover its potential impacts.', 1);
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (2, 3, 'Top 10 Movies to Watch in 2024', '2024-08-25', 'Here''s a list of the top 10 movies to watch in 2024. Don''t miss out on these hits!', 1);
 
@@ -106,5 +108,14 @@ INSERT INTO Reactions ('label', 'image_url') VALUES ('happy', 'https://pngtree.c
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'john', 'doe', 'j.doe@gmail.com', 'j.doe45', '121x390');
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'Jane', 'Doe', 'jane@email.com', 'janeDoe', 'passwordX1');
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'Johnny', 'Dough', 'johnsdough@email.com', 'doughboi', 'passwordx2');
+
+-- Inserting a comment with the content 'Great post!' for post ID 1 by author ID 2
+INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (1, 2, 'Great post!');
+
+-- Inserting a comment with the content 'I totally agree with your point.' for post ID 3 by author ID 1
+INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (3, 1, 'I totally agree with your point.');
+
+-- Inserting a comment with the content 'Can you provide more details?' for post ID 2 by author ID 3
+INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (2, 3, 'Can you provide more details?');
 
 DELETE from Posts WHERE id = 12;
