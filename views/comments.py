@@ -75,3 +75,30 @@ def update_comment(comment_id, comment_data):
     except Exception as e:
         print(f"Error updating comment: {str(e)}")
         return False
+
+def get_comments_by_post(post_id):
+    try:
+        with sqlite3.connect("./db.sqlite3") as conn:
+            conn.row_factory = sqlite3.Row
+            db_cursor = conn.cursor()
+
+            db_cursor.execute(
+                """
+                SELECT c.id, c.content, c.post_id, c.author_id, c.created_on, 
+                       u.username as author_name
+                FROM Comments c
+                JOIN Users u ON c.author_id = u.id
+                WHERE c.post_id = ?
+                ORDER BY c.created_on DESC
+                """,
+                (post_id,)
+            )
+
+            comments = db_cursor.fetchall()
+            comments_list = [dict(row) for row in comments]
+
+        return json.dumps(comments_list)  # Return just the list
+
+    except Exception as e:
+        print(f"Error retrieving comments for post {post_id}: {str(e)}")
+        return json.dumps({"error": "Error retrieving comments"})

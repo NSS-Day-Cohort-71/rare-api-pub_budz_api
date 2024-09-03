@@ -98,7 +98,12 @@ INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'conte
 INSERT INTO Posts ('user_id', 'category_id', 'title', 'publication_date', 'content', 'approved') VALUES (2, 3, 'Top 10 Movies to Watch in 2024', '2024-08-25', 'Here''s a list of the top 10 movies to watch in 2024. Don''t miss out on these hits!', 1);
 
 ALTER TABLE Posts ADD COLUMN is_deleted INTEGER DEFAULT 0;
-ALTER TABLE Posts RENAME COLUMN profile_image TO image_url;
+
+ALTER TABLE Comments ADD COLUMN created_on TIMESTAMP;
+UPDATE Comments SET created_on = CURRENT_TIMESTAMP WHERE created_on IS NULL;
+
+UPDATE Comments SET post_id = 3 WHERE id = 8;  
+UPDATE Comments SET post_id = 4 WHERE id = 9;  
 
 INSERT INTO Tags ('label') VALUES ('JavaScript');
 INSERT INTO Tags ('label') VALUES ('HTML');
@@ -110,7 +115,4 @@ INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') 
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'Jane', 'Doe', 'jane@email.com', 'janeDoe', 'passwordX1');
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'Johnny', 'Dough', 'johnsdough@email.com', 'doughboi', 'passwordx2');
 
-INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (1, 2, 'Great post!');
-INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (3, 1, 'I totally agree with your point.');
-INSERT INTO Comments ('post_id', 'author_id', 'content') VALUES (2, 3, 'Can you provide more details?');
 DELETE from Posts WHERE id = 12;
