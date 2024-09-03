@@ -27,10 +27,10 @@ class JSONServer(HandleRequests):
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "posts":
-                if "comments" in url.get("path", "") and url["pk"] != 0:
-                    response_body = get_comments_by_post(url["pk"])
-                    return self.response(response_body, status.HTTP_200_SUCCESS.value)
-                elif url["pk"] != 0:
+                # if "comments" in url.get("path", "") and url["pk"] != 0:
+                #     response_body = get_comments_by_post(url["pk"])
+                #     return self.response(response_body, status.HTTP_200_SUCCESS.value)
+                if url["pk"] != 0:
                     response_body = get_single_post(url["pk"])
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
                 else:

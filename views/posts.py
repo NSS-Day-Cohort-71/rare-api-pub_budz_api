@@ -33,8 +33,8 @@ def get_posts():
             """
         )
 
-            posts = db_cursor.fetchall()
-            posts_list = [dict(row) for row in posts]
+        posts = db_cursor.fetchall()
+        posts_list = [dict(row) for row in posts]
 
         return json.dumps(posts_list)
     except Exception as e:
@@ -43,7 +43,7 @@ def get_posts():
 
 
 
-def get_single_post(post_id):
+def get_single_post(pk):
     try:
         with sqlite3.connect("./db.sqlite3") as conn:
             conn.row_factory = sqlite3.Row
@@ -71,15 +71,15 @@ def get_single_post(post_id):
         """,
             (pk,),
         )
-        query_results = db_cursor.fetchone()
+        post = db_cursor.fetchone()
 
-            # Convert the result to a dictionary
-            if post:
-                return json.dumps(dict(post))
-            else:
-                return json.dumps({"error": "Post not found"})
+        # Convert the result to a dictionary
+        if post:
+            return json.dumps(dict(post))
+        else:
+            return json.dumps({"error": "Post not found"})
     except Exception as e:
-        print(f"Error fetching post {post_id}: {str(e)}")
+        print(f"Error fetching post {pk}: {str(e)}")
         return json.dumps({"error": "Error fetching post"})
 
 def update_post(id, post_data):
