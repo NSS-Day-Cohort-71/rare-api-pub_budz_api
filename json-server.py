@@ -2,11 +2,11 @@ import json
 from http.server import HTTPServer
 from handler import HandleRequests, status
 
-from views import login_user, create_user
+from views import login_user, create_user, get_all_users, get_single_user
 from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
-from views import get_posts, get_single_post, update_post, delete_post, create_post
-from views import get_all_comments, delete_comment, create_comment, update_comment, get_comments_by_post, get_all_users, get_single_user
+from views import get_posts, get_single_post, update_post, delete_post, create_post, get_posts_by_user, update_post_approval
+from views import get_all_comments, delete_comment, create_comment, update_comment, get_comments_by_post
 
 class JSONServer(HandleRequests):
 
@@ -27,15 +27,21 @@ class JSONServer(HandleRequests):
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "posts":
-                if "comments" in url.get("path", "") and url["pk"] != 0:
-                    response_body = get_comments_by_post(url["pk"])
+    # Check if the user_id is provided in the query params
+                if "user_id" in url["query_params"]:  # Check if the user_id query param exists
+                    user_id = url["query_params"]["user_id"][0]  # Extract the first value
+                    response_body = get_posts_by_user(user_id)  # Fetch posts for the specific user
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
+
+                # Check if a specific post ID (pk) is provided
                 elif url["pk"] != 0:
-                    response_body = get_single_post(url["pk"])
+                    response_body = get_single_post(url["pk"])  # Fetch a single post by ID
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
+
+    # Otherwise, get all posts
                 else:
-                    response_body = get_posts()
-                    self.response(response_body, status.HTTP_200_SUCCESS.value)
+                    response_body = get_posts()  # Fetch all posts
+                    return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "comments":
                 response_body = get_all_comments()
@@ -48,11 +54,14 @@ class JSONServer(HandleRequests):
 
                 response_body = get_all_users()
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
+
             else:
-                self.response(
-                    "Resource not found",
-                    status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                return self.response(
+                json.dumps({"error": "User ID not provided"}),
+                status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value
                 )
+
+
 
         except Exception as e:
             print(f"Error processing GET request: {str(e)}")
@@ -170,9 +179,15 @@ class JSONServer(HandleRequests):
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
 
-            elif url["requested_resource"] == "posts":
+            elif  url["requested_resource"] == "posts":
                 if pk != 0:
-                    successfully_updated = update_post(pk, request_body)
+                    # Check if we are updating the approval status (publish/unpublish)
+                    if "approved" in request_body:
+                        approved = request_body["approved"]
+                        successfully_updated = update_post_approval(pk, approved)
+                    else:
+                        successfully_updated = update_post(pk, request_body)
+
                     if successfully_updated:
                         return self.response(
                             {"message": "Post updated successfully"},
@@ -183,7 +198,6 @@ class JSONServer(HandleRequests):
                             {"message": "Post not found"},
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-
             elif url["requested_resource"] == "categories":
                 category_id = pk
                 put_data = request_body

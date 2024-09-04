@@ -116,3 +116,6 @@ INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') 
 INSERT INTO Users ( 'first_name', 'last_name', 'email', 'username', 'password') VALUES ( 'Johnny', 'Dough', 'johnsdough@email.com', 'doughboi', 'passwordx2');
 
 DELETE from Posts WHERE id = 12;
+
+ALTER TABLE Posts
+ADD COLUMN approved INTEGER DEFAULT 0;
