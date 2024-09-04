@@ -180,3 +180,55 @@ def create_post(new_post_data):
     except sqlite3.Error as e:
         print(f"Error creating post: {e}")
         return False
+
+def get_posts_by_user(user_id):
+    if not user_id.isdigit():
+        print("Invalid user_id passed")
+        return json.dumps([])  # Return empty list if user_id is invalid
+
+    with sqlite3.connect("./db.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        # Select all posts authored by the given user
+        db_cursor.execute("""
+            SELECT
+                Posts.id,
+                Posts.title,
+                Posts.publication_date,
+                Users.first_name || ' ' || Users.last_name AS author,
+                Categories.label AS category,
+                Posts.content,
+                Posts.image_url,
+                Posts.approved,
+                Posts.is_deleted
+            FROM Posts
+            JOIN Users ON Posts.user_id = Users.id
+            JOIN Categories ON Posts.category_id = Categories.id
+            WHERE Posts.user_id = ?
+            AND Posts.is_deleted = 0
+            ORDER BY Posts.publication_date DESC
+        """, (user_id,))
+
+        posts = db_cursor.fetchall()
+        posts_list = [dict(row) for row in posts]
+        print(f"Found {len(posts)} posts for user_id {user_id}")  # Debug print
+
+    return json.dumps(posts_list)
+def update_post_approval(id, approved):
+    with sqlite3.connect("./db.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        # Update only the approval status of the post
+        db_cursor.execute(
+            """
+            UPDATE Posts
+            SET approved = ?
+            WHERE id = ?
+            """,
+            (approved, id),
+        )
+
+        conn.commit()
+    
+    return True if db_cursor.rowcount > 0 else False
