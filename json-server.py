@@ -7,15 +7,12 @@ from views import get_all_tags, update_tag, delete_tag, create_tag
 from views import get_categories, update_category, delete_category, create_category
 from views import get_posts, get_single_post, update_post, delete_post, create_post, get_posts_by_user, update_post_approval
 from views import get_all_comments, delete_comment, create_comment, update_comment, get_comments_by_post
-
+from views import get_tags_by_post_id, add_tags_to_post, remove_tags_from_post, get_all_post_tags, delete_post_tag
 class JSONServer(HandleRequests):
 
     def do_GET(self):
         try:
             url = self.parse_url(self.path)
-            
-            # Debugging: print the url dictionary to inspect its contents
-            #print(f"URL after parsing: {url}")
 
             if url["requested_resource"] == "tags":
                 tags = get_all_tags()
@@ -27,20 +24,17 @@ class JSONServer(HandleRequests):
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "posts":
-    # Check if the user_id is provided in the query params
-                if "user_id" in url["query_params"]:  # Check if the user_id query param exists
-                    user_id = url["query_params"]["user_id"][0]  # Extract the first value
-                    response_body = get_posts_by_user(user_id)  # Fetch posts for the specific user
+                if "user_id" in url["query_params"]:
+                    user_id = url["query_params"]["user_id"][0]
+                    response_body = get_posts_by_user(user_id)
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
-                # Check if a specific post ID (pk) is provided
                 elif url["pk"] != 0:
-                    response_body = get_single_post(url["pk"])  # Fetch a single post by ID
+                    response_body = get_single_post(url["pk"])
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
-    # Otherwise, get all posts
                 else:
-                    response_body = get_posts()  # Fetch all posts
+                    response_body = get_posts()
                     return self.response(response_body, status.HTTP_200_SUCCESS.value)
 
             elif url["requested_resource"] == "comments":
@@ -55,13 +49,24 @@ class JSONServer(HandleRequests):
                 response_body = get_all_users()
                 self.response(response_body, status.HTTP_200_SUCCESS.value)
 
+            elif url["requested_resource"] == "posttags":
+                # Check if a post_id is provided in the query parameters
+                if "post_id" in url["query_params"]:
+                    post_id = url["query_params"]["post_id"][0]
+                    tags = get_tags_by_post_id(post_id)
+                    response = json.dumps(tags)
+                    self.response(response, status.HTTP_200_SUCCESS.value)
+                else:
+                    # If no post_id is provided, return all post-tag associations
+                    post_tags = get_all_post_tags()
+                    response = json.dumps(post_tags)
+                    self.response(response, status.HTTP_200_SUCCESS.value)
+
             else:
-                return self.response(
-                json.dumps({"error": "User ID not provided"}),
-                status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value
+                self.response(
+                    json.dumps({"error": "Invalid resource"}),
+                    status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value
                 )
-
-
 
         except Exception as e:
             print(f"Error processing GET request: {str(e)}")
@@ -126,6 +131,32 @@ class JSONServer(HandleRequests):
                         json.dumps({"error": "Failed to create post"}),
                         status.HTTP_500_SERVER_ERROR.value,
                     )
+
+            if url["requested_resource"] == "posttags":
+                content_length = int(self.headers["Content-Length"])
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data)
+
+                post_id = data.get("post_id")
+                tag_ids = data.get("tag_ids", [])
+
+                if post_id and tag_ids:
+                    success = add_tags_to_post(post_id, tag_ids)
+                    if success:
+                        self.response(
+                            json.dumps({"message": "Tags successfully associated with post."}),
+                            status.HTTP_201_SUCCESS_CREATED.value,
+                        )
+                    else:
+                        self.response(
+                            json.dumps({"error": "Failed to associate tags with post"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
+                else:
+                    self.response(
+                        json.dumps({"error": "Post ID and Tag IDs required"}),
+                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
+                    )
             
             elif url["requested_resource"] == "comments":
                 content_length = int(self.headers["Content-Length"])
@@ -179,9 +210,8 @@ class JSONServer(HandleRequests):
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
 
-            elif  url["requested_resource"] == "posts":
+            elif url["requested_resource"] == "posts":
                 if pk != 0:
-                    # Check if we are updating the approval status (publish/unpublish)
                     if "approved" in request_body:
                         approved = request_body["approved"]
                         successfully_updated = update_post_approval(pk, approved)
@@ -198,6 +228,7 @@ class JSONServer(HandleRequests):
                             {"message": "Post not found"},
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
+
             elif url["requested_resource"] == "categories":
                 category_id = pk
                 put_data = request_body
@@ -214,7 +245,7 @@ class JSONServer(HandleRequests):
                             {"message": "Category not found"},
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-            
+
             elif url["requested_resource"] == "comments":
                 if pk != 0:
                     successfully_updated = update_comment(pk, request_body)
@@ -229,8 +260,47 @@ class JSONServer(HandleRequests):
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
 
+            # Handling the posttags update
+            elif url["requested_resource"] == "posttags":
+                post_id = request_body.get("post_id")
+                new_tag_ids = request_body.get("tag_ids", [])
+
+                if post_id is not None:
+                    # Step 1: Remove all existing tags for this post
+                    remove_success = remove_tags_from_post(post_id, [])
+
+                    if remove_success:
+                        # Step 2: If new_tag_ids is not empty, add the new tags to the post
+                        if new_tag_ids:
+                            success = add_tags_to_post(post_id, new_tag_ids)
+
+                            if success:
+                                return self.response(
+                                    json.dumps({"message": "Post tags updated successfully"}),
+                                    status.HTTP_200_SUCCESS.value,
+                                )
+                            else:
+                                return self.response(
+                                    json.dumps({"error": "Failed to update tags for post"}),
+                                    status.HTTP_500_SERVER_ERROR.value,
+                                )
+                        else:
+                            return self.response(
+                                json.dumps({"message": "Tags removed, no new tags added"}),
+                                status.HTTP_200_SUCCESS.value,
+                            )
+                    else:
+                        return self.response(
+                            json.dumps({"error": "Failed to remove existing tags for post"}),
+                            status.HTTP_500_SERVER_ERROR.value,
+                        )
+                else:
+                    return self.response(
+                        json.dumps({"error": "Post ID and Tag IDs required"}),
+                        status.HTTP_400_CLIENT_ERROR_BAD_REQUEST_DATA.value,
+                    )
+
         except Exception as e:
-            # Log the error and return a 500 status code
             print(f"Error processing PUT request: {str(e)}")
             self.response(
                 json.dumps({"error": "Internal server error"}),
@@ -286,7 +356,7 @@ class JSONServer(HandleRequests):
                             "Tag not found",
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
                         )
-            
+
             elif url["requested_resource"] == "comments":
                 if pk != 0:
                     successfully_deleted = delete_comment(pk)
@@ -299,6 +369,20 @@ class JSONServer(HandleRequests):
                         return self.response(
                             "Comment not found",
                             status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value,
+                        )
+
+            elif url["requested_resource"] == "posttags":
+                if pk != 0:
+                    successfully_deleted = delete_post_tag(pk)  # Use function to delete by primary key
+                    if successfully_deleted:
+                        return self.response(
+                            "Post tag association deleted successfully", 
+                            status.HTTP_200_SUCCESS.value
+                        )
+                    else:
+                        return self.response(
+                            "Post tag association not found", 
+                            status.HTTP_404_CLIENT_ERROR_RESOURCE_NOT_FOUND.value
                         )
 
         except Exception as e:
