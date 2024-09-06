@@ -73,12 +73,27 @@ CREATE TABLE "Tags" (
   "label" varchar
 );
 
+--DELETED this table as i was not able to alter it and add a unique id + constraits col to it.
+-- Abdul
 CREATE TABLE "PostTags" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
   "post_id" INTEGER,
   "tag_id" INTEGER,
   FOREIGN KEY(`post_id`) REFERENCES `Posts`(`id`),
   FOREIGN KEY(`tag_id`) REFERENCES `Tags`(`id`)
+);
+
+-- This is the newly created PostTags table with the unique ids. 
+-- This table's name should be PostTags in db.sqlite3
+-- Abdul
+
+CREATE TABLE "PostTags_New" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "post_id" INTEGER,
+    "tag_id" INTEGER,
+    CONSTRAINT unique_post_tag UNIQUE (post_id, tag_id),
+    FOREIGN KEY(`post_id`) REFERENCES `Posts`(`id`),
+    FOREIGN KEY(`tag_id`) REFERENCES `Tags`(`id`)
 );
 
 CREATE TABLE "Categories" (
@@ -119,3 +134,13 @@ DELETE from Posts WHERE id = 12;
 
 ALTER TABLE Posts
 ADD COLUMN approved INTEGER DEFAULT 0;
+
+INSERT OR IGNORE INTO PostTags_New (post_id, tag_id)
+SELECT post_id, tag_id FROM PostTags;
+
+DROP TABLE PostTags;
+
+ALTER TABLE PostTags_New RENAME TO PostTags;
+
+
+-- INSERT INTO PostTags (post_id, tag_id) VALUES (1, 1);
